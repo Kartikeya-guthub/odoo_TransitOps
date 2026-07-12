@@ -16,5 +16,9 @@ export const config = {
     "/drivers",
     "/trips/:path*",
     "/trips",
+    "/maintenance/:path*",
+    "/maintenance",
+    "/fuel-expenses/:path*",
+    "/fuel-expenses",
   ],
 }

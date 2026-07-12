@@ -1,19 +1,33 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Vehicle } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { VehicleFormDialog } from "@/components/vehicles/vehicle-form-dialog";
 import { VehicleDeleteDialog } from "@/components/vehicles/vehicle-delete-dialog";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArchiveRestore } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
 
 export default function VehiclesPage() {
   const { data: session } = useSession();
   const isManager = session?.user?.role === "FLEET_MANAGER";
+  const queryClient = useQueryClient();
 
   const { data: vehicles, isLoading } = useQuery<Vehicle[]>({
     queryKey: ["vehicles"],
@@ -21,6 +35,24 @@ export default function VehiclesPage() {
       const res = await fetch("/api/vehicles");
       if (!res.ok) throw new Error("Failed to fetch vehicles");
       return res.json();
+    }
+  });
+
+  const retireMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/vehicles/${id}/retire`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to retire vehicle");
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vehicles"] });
+      queryClient.invalidateQueries({ queryKey: ["vehicles", "available"] });
+    },
+    onError: (error: any) => {
+      alert(error.message);
     }
   });
 
@@ -89,6 +121,36 @@ export default function VehiclesPage() {
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <VehicleFormDialog vehicle={vehicle} />
+                        {vehicle.status !== "RETIRED" && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="icon" title="Retire Vehicle">
+                                <ArchiveRestore className="h-4 w-4 text-orange-600" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Retire Vehicle?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will permanently mark the vehicle as RETIRED and remove it from all available dispatch and maintenance pools.
+                                  It cannot be on an active trip.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => retireMutation.mutate(vehicle.id)}
+                                  className="bg-orange-600 hover:bg-orange-700"
+                                >
+                                  {retireMutation.isPending && retireMutation.variables === vehicle.id && (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  )}
+                                  Confirm Retirement
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
                         <VehicleDeleteDialog vehicle={vehicle} />
                       </div>
                     </TableCell>

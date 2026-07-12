@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Truck, Users, LogOut, LayoutDashboard, Map } from "lucide-react";
+import { Truck, Users, LogOut, LayoutDashboard, Map, Wrench, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Trips", href: "/trips", icon: Map },
+  { name: "Maintenance", href: "/maintenance", icon: Wrench },
+  { name: "Finances", href: "/fuel-expenses", icon: Wallet },
   { name: "Vehicles", href: "/vehicles", icon: Truck },
   { name: "Drivers", href: "/drivers", icon: Users },
 ];

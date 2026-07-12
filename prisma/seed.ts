@@ -7,6 +7,10 @@ async function main() {
   console.log('Seeding data...')
   
   // Wipe in FK-safe order
+  await prisma.fuelLog.deleteMany()
+  await prisma.expense.deleteMany()
+  await prisma.maintenanceLog.deleteMany()
+  await prisma.trip.deleteMany()
   await prisma.driverProfile.deleteMany()
   await prisma.vehicle.deleteMany()
   await prisma.user.deleteMany()
@@ -96,9 +100,50 @@ async function main() {
   ]
 
   for (const v of vehicles) {
-    await prisma.vehicle.create({ data: v })
-    console.log(`Created vehicle: ${v.regNumber} [${v.status}]`)
+    const created = await prisma.vehicle.create({ data: v })
+    console.log(`Created vehicle: ${created.regNumber} [${created.status}]`)
+
+    // Seed Active Maintenance Log for the IN_SHOP vehicle
+    if (created.status === "IN_SHOP") {
+      await prisma.maintenanceLog.create({
+        data: {
+          vehicleId: created.id,
+          description: "Routine engine overhaul and brake pads replacement",
+          cost: 1200,
+          date: new Date(),
+          status: "ACTIVE"
+        }
+      })
+      console.log(`Created MaintenanceLog for ${created.regNumber}`)
+    }
   }
+
+  // --- 4. Seed Standalone Fuel Logs & Expenses ---
+  // Fetch vehicles to use their real IDs
+  const dbVehicles = await prisma.vehicle.findMany()
+  if (dbVehicles.length > 0) {
+    const v1 = dbVehicles[0] // TRK-001
+    const v2 = dbVehicles[1] // VAN-002
+
+    await prisma.fuelLog.createMany({
+      data: [
+        { vehicleId: v1.id, liters: 150.5, cost: 220.75, date: new Date(new Date().setDate(new Date().getDate() - 2)) },
+        { vehicleId: v1.id, liters: 120.0, cost: 180.00, date: new Date() },
+        { vehicleId: v2.id, liters: 60.5,  cost: 95.50,  date: new Date(new Date().setDate(new Date().getDate() - 1)) },
+      ]
+    })
+    console.log("Created Standalone Fuel Logs")
+
+    await prisma.expense.createMany({
+      data: [
+        { vehicleId: v1.id, type: "TOLL", amount: 45.00, date: new Date(new Date().setDate(new Date().getDate() - 2)) },
+        { vehicleId: v1.id, type: "MAINTENANCE", amount: 150.00, date: new Date() },
+        { vehicleId: v2.id, type: "MISC", amount: 25.00, date: new Date(new Date().setDate(new Date().getDate() - 1)) },
+      ]
+    })
+    console.log("Created Expenses")
+  }
+
 }
 
 main()
