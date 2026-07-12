@@ -156,6 +156,7 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
                     <div className="flex items-center gap-2">
                       <a 
                         href={doc.fileUrl} 
+                        download={`${doc.docType.replace(/ /g, '_')}_Document`}
                         target="_blank" 
                         rel="noreferrer"
                         className="text-sm font-medium text-blue-600 hover:underline px-3 py-1"

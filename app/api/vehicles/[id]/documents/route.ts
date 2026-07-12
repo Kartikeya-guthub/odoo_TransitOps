@@ -18,16 +18,12 @@ export async function POST(
       return NextResponse.json({ error: "File and document type required" }, { status: 400 });
     }
 
-    // Since Vercel Blob isn't set up, mock storage locally for demo
+    // Since Vercel has a read-only filesystem and Vercel Blob isn't set up,
+    // we'll convert the file to a base64 data URI to store directly in the database for the demo.
     const buffer = Buffer.from(await file.arrayBuffer());
-    const uploadDir = path.join(process.cwd(), "public", "uploads", params.id);
-    await fs.mkdir(uploadDir, { recursive: true });
-    
-    const fileName = `${Date.now()}-${file.name}`;
-    const filePath = path.join(uploadDir, fileName);
-    await fs.writeFile(filePath, buffer);
-
-    const fileUrl = `/uploads/${params.id}/${fileName}`;
+    const base64String = buffer.toString('base64');
+    const mimeType = file.type || 'application/octet-stream';
+    const fileUrl = `data:${mimeType};base64,${base64String}`;
 
     const doc = await prisma.vehicleDocument.create({
       data: {

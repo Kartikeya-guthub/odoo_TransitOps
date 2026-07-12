@@ -140,7 +140,9 @@ export function TripFormDialog() {
                 value={form.watch("vehicleId")}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={vehiclesLoading ? "Loading..." : "Select Vehicle"} />
+                  <SelectValue placeholder={vehiclesLoading ? "Loading..." : "Select Vehicle"}>
+                    {selectedVehicle ? `${selectedVehicle.regNumber} (${selectedVehicle.name})` : undefined}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {vehicles?.length === 0 ? (
@@ -164,7 +166,9 @@ export function TripFormDialog() {
                 value={form.watch("driverId")}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={driversLoading ? "Loading..." : "Select Driver"} />
+                  <SelectValue placeholder={driversLoading ? "Loading..." : "Select Driver"}>
+                    {drivers?.find(d => d.id === form.watch("driverId"))?.name || undefined}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {drivers?.length === 0 ? (
