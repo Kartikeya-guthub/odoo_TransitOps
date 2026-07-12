@@ -30,11 +30,11 @@ export default function DriversPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "AVAILABLE": return "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20";
-      case "ON_TRIP": return "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20";
-      case "OFF_DUTY": return "bg-gray-500/10 text-gray-500 hover:bg-gray-500/20";
-      case "SUSPENDED": return "bg-red-500/10 text-red-500 hover:bg-red-500/20";
-      default: return "bg-gray-500/10 text-gray-500";
+      case "AVAILABLE": return "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100";
+      case "ON_TRIP": return "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100";
+      case "OFF_DUTY": return "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200";
+      case "SUSPENDED": return "bg-red-50 text-red-600 border-red-200 hover:bg-red-100";
+      default: return "bg-gray-50 text-gray-600 border-gray-200";
     }
   };
 
@@ -97,12 +97,12 @@ export default function DriversPage() {
                     </TableCell>
                     <TableCell>{new Date(driver.licenseExpiryDate).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className={getStatusColor(driver.status)}>
+                      <Badge variant="outline" className={getStatusColor(driver.status)}>
                         {driver.status.replace("_", " ")}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <span className={getScoreColor(driver.safetyScore)}>
+                      <span className={`whitespace-nowrap ${getScoreColor(driver.safetyScore)}`}>
                         {driver.safetyScore}/100
                       </span>
                     </TableCell>

@@ -8,8 +8,13 @@ export default withAuth({
 
 export const config = {
   matcher: [
+    "/",
     "/dashboard/:path*",
     "/vehicles/:path*",
     "/vehicles",
+    "/drivers/:path*",
+    "/drivers",
+    "/trips/:path*",
+    "/trips",
   ],
 }

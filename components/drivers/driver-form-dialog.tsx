@@ -36,7 +36,9 @@ export function DriverFormDialog({ driver }: DriverFormDialogProps) {
       name: driver?.name || "",
       licenseNumber: driver?.licenseNumber || "",
       licenseCategory: driver?.licenseCategory || "",
-      licenseExpiryDate: driver ? new Date(driver.licenseExpiryDate) : new Date(),
+      licenseExpiryDate: (driver 
+        ? new Date(driver.licenseExpiryDate).toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0]) as unknown as Date,
       contactNumber: driver?.contactNumber || "",
       safetyScore: driver?.safetyScore ?? 100,
     },
@@ -117,15 +119,7 @@ export function DriverFormDialog({ driver }: DriverFormDialogProps) {
               <Label>Expiry Date</Label>
               <Input 
                 type="date" 
-                {...form.register("licenseExpiryDate", { 
-                  // React Hook Form returns string for input[type=date], our Zod schema handles the transform to Date
-                })} 
-                // Format the default value if it's a Date object
-                defaultValue={
-                  form.getValues("licenseExpiryDate") instanceof Date 
-                    ? (form.getValues("licenseExpiryDate") as unknown as Date).toISOString().split('T')[0] 
-                    : form.getValues("licenseExpiryDate") as unknown as string
-                }
+                {...form.register("licenseExpiryDate")} 
               />
               {form.formState.errors.licenseExpiryDate && <p className="text-sm text-destructive">{form.formState.errors.licenseExpiryDate.message}</p>}
             </div>
@@ -136,7 +130,7 @@ export function DriverFormDialog({ driver }: DriverFormDialogProps) {
               {form.formState.errors.contactNumber && <p className="text-sm text-destructive">{form.formState.errors.contactNumber.message}</p>}
             </div>
 
-            <div className="space-y-2 col-span-2">
+            <div className="space-y-2">
               <Label>Safety Score (0-100)</Label>
               <Input type="number" {...form.register("safetyScore", { valueAsNumber: true })} />
               {form.formState.errors.safetyScore && <p className="text-sm text-destructive">{form.formState.errors.safetyScore.message}</p>}

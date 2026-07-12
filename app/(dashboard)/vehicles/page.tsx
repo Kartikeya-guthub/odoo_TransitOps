@@ -26,11 +26,11 @@ export default function VehiclesPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "AVAILABLE": return "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20";
-      case "ON_TRIP": return "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20";
-      case "IN_SHOP": return "bg-orange-500/10 text-orange-500 hover:bg-orange-500/20";
-      case "RETIRED": return "bg-slate-500/10 text-slate-500 hover:bg-slate-500/20";
-      default: return "bg-gray-500/10 text-gray-500";
+      case "AVAILABLE": return "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100";
+      case "ON_TRIP": return "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100";
+      case "IN_SHOP": return "bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100";
+      case "RETIRED": return "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200";
+      default: return "bg-gray-50 text-gray-600 border-gray-200";
     }
   };
 
@@ -79,7 +79,7 @@ export default function VehiclesPage() {
                   <TableCell>{vehicle.name}</TableCell>
                   <TableCell className="text-muted-foreground">{vehicle.type}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className={getStatusColor(vehicle.status)}>
+                    <Badge variant="outline" className={getStatusColor(vehicle.status)}>
                       {vehicle.status.replace("_", " ")}
                     </Badge>
                   </TableCell>

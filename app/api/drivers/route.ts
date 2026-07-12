@@ -8,6 +8,11 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 export async function GET(req: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "401 Unauthorized" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status");
   const licenseExpiring = searchParams.get("licenseExpiring") === "true";

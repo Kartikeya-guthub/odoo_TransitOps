@@ -7,6 +7,11 @@ import prisma from "@/lib/db";
 import { z } from "zod";
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "401 Unauthorized" }, { status: 401 });
+  }
+
   const vehicle = await prisma.vehicle.findUnique({
     where: { id: params.id },
   });
@@ -26,7 +31,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
   try {
     const json = await req.json();
-    const body = vehicleSchema.parse(json);
+    const body = vehicleSchema.partial().parse(json);
 
     const vehicle = await prisma.vehicle.update({
       where: { id: params.id },

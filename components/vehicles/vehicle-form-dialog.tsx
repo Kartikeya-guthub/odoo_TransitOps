@@ -135,7 +135,7 @@ export function VehicleFormDialog({ vehicle }: VehicleFormDialogProps) {
               {form.formState.errors.odometer && <p className="text-sm text-destructive">{form.formState.errors.odometer.message}</p>}
             </div>
 
-            <div className="space-y-2 col-span-2">
+            <div className="space-y-2">
               <Label>Acquisition Cost ($)</Label>
               <Input type="number" {...form.register("acquisitionCost", { valueAsNumber: true })} />
               {form.formState.errors.acquisitionCost && <p className="text-sm text-destructive">{form.formState.errors.acquisitionCost.message}</p>}

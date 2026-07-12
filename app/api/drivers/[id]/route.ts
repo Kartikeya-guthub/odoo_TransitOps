@@ -8,6 +8,11 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "401 Unauthorized" }, { status: 401 });
+  }
+
   const driver = await prisma.driverProfile.findUnique({
     where: { id: params.id },
   });
