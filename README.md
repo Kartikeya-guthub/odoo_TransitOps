@@ -1,5 +1,10 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Assumptions & Design Decisions
+- **Fleet Utilization Calculation**: Fleet Utilization is calculated against the active fleet size (excluding retired vehicles). Vehicles `IN_SHOP` are included in the denominator because they represent temporarily unavailable capital assets, penalizing the utilization score to encourage fast repairs.
+
+## Project Structure
+
 ## Getting Started
 
 First, run the development server:

@@ -17,7 +17,7 @@ type ExpenseWithVehicle = Expense & { vehicle: Vehicle };
 
 export default function FinancesPage() {
   const { data: session } = useSession();
-  const isManagerOrDriver = session?.user?.role === "FLEET_MANAGER" || session?.user?.role === "DRIVER";
+  const isManagerOrDriver = session?.user?.role === "FLEET_MANAGER" || session?.user?.role === "DISPATCHER";
 
   const { data: fuelLogs, isLoading: fuelLoading } = useQuery<FuelLogWithVehicle[]>({
     queryKey: ["fuel-logs"],

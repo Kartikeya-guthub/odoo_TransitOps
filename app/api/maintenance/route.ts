@@ -5,7 +5,7 @@ import { maintenanceSchema } from "@/lib/validations/maintenance";
 
 export async function GET() {
   try {
-    await requireRole(["FLEET_MANAGER", "DRIVER", "SAFETY_OFFICER", "FINANCIAL_ANALYST"]);
+    await requireRole(["FLEET_MANAGER", "DISPATCHER", "SAFETY_OFFICER", "FINANCIAL_ANALYST"]);
     
     const logs = await prisma.maintenanceLog.findMany({
       include: {

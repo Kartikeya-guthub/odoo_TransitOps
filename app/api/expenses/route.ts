@@ -5,7 +5,7 @@ import { expenseSchema } from "@/lib/validations/expense";
 
 export async function GET() {
   try {
-    await requireRole(["FLEET_MANAGER", "DRIVER", "SAFETY_OFFICER", "FINANCIAL_ANALYST"]);
+    await requireRole(["FLEET_MANAGER", "DISPATCHER", "SAFETY_OFFICER", "FINANCIAL_ANALYST"]);
     
     const expenses = await prisma.expense.findMany({
       include: {
@@ -24,7 +24,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    await requireRole(["FLEET_MANAGER", "DRIVER"]);
+    await requireRole(["FLEET_MANAGER", "DISPATCHER"]);
     
     const body = await req.json();
     const validated = expenseSchema.parse(body);

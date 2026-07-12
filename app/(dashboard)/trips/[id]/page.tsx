@@ -53,7 +53,7 @@ export default function TripDetailPage() {
   });
 
   const isManager = session?.user?.role === "FLEET_MANAGER";
-  const isDriver = session?.user?.role === "DRIVER";
+  const isDriver = session?.user?.role === "DISPATCHER";
   const canModify = isManager || isDriver;
 
   const { data: trip, isLoading, isError } = useQuery<TripWithRelations>({

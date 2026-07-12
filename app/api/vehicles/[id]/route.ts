@@ -23,7 +23,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const session = await getServerSession(authOptions);
   
   try {
-    requireRole(session, ["FLEET_MANAGER"]);
+    await requireRole(session, ["FLEET_MANAGER"]);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Forbidden";
     return NextResponse.json({ error: message }, { status: 403 });
@@ -54,7 +54,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
   const session = await getServerSession(authOptions);
   
   try {
-    requireRole(session, ["FLEET_MANAGER"]);
+    await requireRole(session, ["FLEET_MANAGER"]);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Forbidden";
     return NextResponse.json({ error: message }, { status: 403 });

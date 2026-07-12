@@ -7,7 +7,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await requireRole(["FLEET_MANAGER", "DRIVER"]);
+    const session = await requireRole(["FLEET_MANAGER", "DISPATCHER"]);
     
     // 1. Fetch trip by ID
     const trip = await prisma.trip.findUnique({

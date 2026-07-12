@@ -20,5 +20,7 @@ export const config = {
     "/maintenance",
     "/fuel-expenses/:path*",
     "/fuel-expenses",
+    "/reports/:path*",
+    "/reports",
   ],
 }

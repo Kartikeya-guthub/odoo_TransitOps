@@ -10,8 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { DriverFormDialog } from "@/components/drivers/driver-form-dialog";
 import { DriverStatusDialog } from "@/components/drivers/driver-status-dialog";
 import { DriverDeleteDialog } from "@/components/drivers/driver-delete-dialog";
-import { Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { isDriverEligible } from "@/lib/derived/driverEligibility";
+import { Loader2, ArrowUpDown } from "lucide-react";
+import { DataTable } from "@/components/ui/data-table";
+import { ColumnDef } from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
 
 export default function DriversPage() {
   const { data: session } = useSession();
@@ -30,87 +32,103 @@ export default function DriversPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "AVAILABLE": return "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100";
-      case "ON_TRIP": return "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100";
-      case "OFF_DUTY": return "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200";
-      case "SUSPENDED": return "bg-red-50 text-red-600 border-red-200 hover:bg-red-100";
-      default: return "bg-gray-50 text-gray-600 border-gray-200";
+      case "AVAILABLE": return "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-900";
+      case "ON_TRIP": return "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/50 dark:text-blue-400 dark:border-blue-900";
+      case "SUSPENDED": return "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/50 dark:text-red-400 dark:border-red-900";
+      case "TERMINATED": return "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700";
+      default: return "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700";
     }
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return "text-emerald-600";
-    if (score >= 75) return "text-amber-600";
-    return "text-destructive font-semibold";
+    if (score >= 90) return "text-emerald-600 dark:text-emerald-400";
+    if (score >= 70) return "text-amber-600 dark:text-amber-400";
+    return "text-red-600 dark:text-red-400";
   };
+
+  const columns: ColumnDef<DriverProfile>[] = [
+    {
+      accessorKey: "name",
+      header: ({ column }) => (
+        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          Name <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => <div className="font-medium px-4">{row.original.name}</div>,
+    },
+    {
+      accessorKey: "licenseNumber",
+      header: "License Number",
+    },
+    {
+      accessorKey: "licenseExpiryDate",
+      header: ({ column }) => (
+        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          License Expiry <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => {
+        const date = new Date(row.original.licenseExpiryDate);
+        return <div>{date.toLocaleDateString()}</div>;
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.original.status;
+        return (
+          <Badge variant="outline" className={getStatusColor(status)}>
+            {status.replace("_", " ")}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "safetyScore",
+      header: ({ column }) => (
+        <div className="text-right">
+          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+            Safety Score <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      ),
+      cell: ({ row }) => {
+        const score = row.original.safetyScore;
+        return (
+          <div className={`text-right font-medium pr-4 ${getScoreColor(score)}`}>
+            {score}/100
+          </div>
+        );
+      },
+    },
+    ...(showActions ? [{
+      id: "actions",
+      cell: ({ row }) => {
+        const driver = row.original;
+        return (
+          <div className="flex justify-end pr-4 gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            {isManager && <DriverFormDialog driver={driver} />}
+            {isSafety && <DriverStatusDialog driver={driver} />}
+            {isManager && <DriverDeleteDialog driver={driver} />}
+          </div>
+        );
+      },
+    }] as ColumnDef<DriverProfile>[] : []),
+  ];
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Driver Profiles</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Drivers</h1>
           <p className="text-muted-foreground mt-2">
-            Manage personnel, track safety scores, and monitor compliance.
+            Manage driver profiles, licenses, and safety scores.
           </p>
         </div>
         {isManager && <DriverFormDialog />}
       </div>
 
-      <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden">
-        <Table>
-          <TableHeader className="bg-muted/50">
-            <TableRow>
-              <TableHead className="w-[200px]">Name</TableHead>
-              <TableHead>License</TableHead>
-              <TableHead>Expiry Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Safety Score</TableHead>
-              <TableHead>Eligibility</TableHead>
-              {showActions && <TableHead className="text-right">Actions</TableHead>}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={showActions ? 7 : 6} className="h-48 text-center">
-                  <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
-                </TableCell>
-              </TableRow>
-            ) : drivers?.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={showActions ? 7 : 6} className="h-48 text-center text-muted-foreground">
-                  No drivers found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              drivers?.map((driver) => {
-                const eligible = isDriverEligible(driver);
-                return (
-                  <TableRow key={driver.id} className="group transition-colors">
-                    <TableCell className="font-medium">
-                      {driver.name}
-                      <div className="text-xs text-muted-foreground font-normal mt-0.5">{driver.contactNumber}</div>
-                    </TableCell>
-                    <TableCell>
-                      {driver.licenseNumber}
-                      <div className="text-xs text-muted-foreground mt-0.5">{driver.licenseCategory}</div>
-                    </TableCell>
-                    <TableCell>{new Date(driver.licenseExpiryDate).toLocaleDateString()}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={getStatusColor(driver.status)}>
-                        {driver.status.replace("_", " ")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <span className={`whitespace-nowrap ${getScoreColor(driver.safetyScore)}`}>
-                        {driver.safetyScore}/100
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {eligible ? (
-                        <div className="flex items-center text-emerald-600 text-sm font-medium">
-                          <CheckCircle2 className="w-4 h-4 mr-1.5" /> Eligible
-                        </div>
                       ) : (
                         <div className="flex items-center text-destructive text-sm font-medium">
                           <AlertTriangle className="w-4 h-4 mr-1.5" /> Ineligible

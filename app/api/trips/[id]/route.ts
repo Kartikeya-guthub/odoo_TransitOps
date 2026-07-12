@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    await requireRole(["FLEET_MANAGER", "DRIVER", "SAFETY_OFFICER", "FINANCIAL_ANALYST"]);
+    await requireRole(["FLEET_MANAGER", "DISPATCHER", "SAFETY_OFFICER", "FINANCIAL_ANALYST"]);
     
     const trip = await prisma.trip.findUnique({
       where: { id: params.id },
@@ -38,7 +38,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    await requireRole(["FLEET_MANAGER", "DRIVER"]);
+    await requireRole(["FLEET_MANAGER", "DISPATCHER"]);
     
     const trip = await prisma.trip.findUnique({
       where: { id: params.id }

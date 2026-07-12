@@ -19,7 +19,7 @@ type TripWithRelations = Trip & {
 export default function TripsPage() {
   const { data: session } = useSession();
   const isManager = session?.user?.role === "FLEET_MANAGER";
-  const isDriver = session?.user?.role === "DRIVER";
+  const isDriver = session?.user?.role === "DISPATCHER";
   const canCreate = isManager || isDriver;
 
   const { data: trips, isLoading } = useQuery<TripWithRelations[]>({

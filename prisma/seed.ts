@@ -19,7 +19,7 @@ async function main() {
 
   const users = [
     { email: 'fleet@example.com', role: Role.FLEET_MANAGER },
-    { email: 'driver@example.com', role: Role.DRIVER },
+    { email: 'dispatcher@example.com', role: Role.DISPATCHER },
     { email: 'safety@example.com', role: Role.SAFETY_OFFICER },
     { email: 'finance@example.com', role: Role.FINANCIAL_ANALYST },
   ]

@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   
   try {
-    requireRole(session, ["FLEET_MANAGER"]);
+    await requireRole(session, ["FLEET_MANAGER"]);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Forbidden";
     return NextResponse.json({ error: message }, { status: 403 });

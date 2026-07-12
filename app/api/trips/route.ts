@@ -5,7 +5,7 @@ import { requireRole } from "@/lib/rbac";
 
 export async function GET() {
   try {
-    const session = await requireRole(["FLEET_MANAGER", "DRIVER", "SAFETY_OFFICER", "FINANCIAL_ANALYST"]);
+    const session = await requireRole(["FLEET_MANAGER", "DISPATCHER", "SAFETY_OFFICER", "FINANCIAL_ANALYST"]);
     
     // Fetch all trips. Include relations.
     const trips = await prisma.trip.findMany({
@@ -30,7 +30,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     // Only Fleet Manager and Driver can create a Draft trip.
-    const session = await requireRole(["FLEET_MANAGER", "DRIVER"]);
+    const session = await requireRole(["FLEET_MANAGER", "DISPATCHER"]);
     
     const body = await req.json();
     const validated = tripSchema.parse(body);
