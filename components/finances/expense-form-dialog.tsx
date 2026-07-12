@@ -107,7 +107,11 @@ export function ExpenseFormDialog() {
                 value={form.watch("vehicleId")}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={vehiclesLoading ? "Loading..." : "Select Vehicle"} />
+                  <SelectValue placeholder={vehiclesLoading ? "Loading..." : "Select Vehicle"}>
+                    {vehicles?.find(v => v.id === form.watch("vehicleId")) 
+                      ? `${vehicles.find(v => v.id === form.watch("vehicleId"))?.regNumber} (${vehicles.find(v => v.id === form.watch("vehicleId"))?.name})`
+                      : vehiclesLoading ? "Loading..." : "Select Vehicle"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {vehicles?.length === 0 ? (
@@ -131,7 +135,11 @@ export function ExpenseFormDialog() {
                 value={form.watch("type")}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select Type" />
+                  <SelectValue placeholder="Select Type">
+                    {form.watch("type") === "TOLL" ? "Toll" :
+                     form.watch("type") === "MAINTENANCE" ? "Maintenance Parts/Service" :
+                     form.watch("type") === "MISC" ? "Miscellaneous" : "Select Type"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="TOLL">Toll</SelectItem>

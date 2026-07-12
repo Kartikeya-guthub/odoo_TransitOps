@@ -56,7 +56,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
     return NextResponse.json(driver);
   } catch (error: unknown) {
-    if (error instanceof Error && error.message.startsWith("403")) {
+    if (error instanceof Error && (error.message === "Forbidden" || error.message.startsWith("Forbidden:"))) {
       return NextResponse.json({ error: error.message }, { status: 403 });
     }
     if (error instanceof z.ZodError) {

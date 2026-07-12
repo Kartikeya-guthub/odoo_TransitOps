@@ -8,7 +8,10 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { TripFormDialog } from "@/components/trips/trip-form-dialog";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowUpDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
+import { ColumnDef } from "@tanstack/react-table";
 
 type TripWithRelations = Trip & {
   vehicle: Vehicle;

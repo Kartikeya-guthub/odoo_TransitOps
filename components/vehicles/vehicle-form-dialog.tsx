@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { vehicleSchema, VehicleFormValues } from "@/lib/validations/vehicle";
 
 interface VehicleFormDialogProps {
@@ -119,7 +120,17 @@ export function VehicleFormDialog({ vehicle }: VehicleFormDialogProps) {
 
             <div className="space-y-2">
               <Label>Region</Label>
-              <Input placeholder="North, South, etc." {...form.register("region")} />
+              <Select onValueChange={(val) => form.setValue("region", val)} defaultValue={form.getValues("region")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select region" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="North">North</SelectItem>
+                  <SelectItem value="South">South</SelectItem>
+                  <SelectItem value="East">East</SelectItem>
+                  <SelectItem value="West">West</SelectItem>
+                </SelectContent>
+              </Select>
               {form.formState.errors.region && <p className="text-sm text-destructive">{form.formState.errors.region.message}</p>}
             </div>
 

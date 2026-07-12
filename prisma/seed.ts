@@ -59,7 +59,7 @@ async function main() {
       name: "Charlie Davis",
       licenseNumber: "DL-1003",
       licenseCategory: "Class B",
-      licenseExpiryDate: new Date(new Date().setDate(new Date().getDate() - 5)), // Expired 5 days ago
+      licenseExpiryDate: new Date(new Date().setDate(new Date().getDate() + 15)), // Expiring in 15 days (hits the 30-day cron window)
       contactNumber: "555-0103",
       safetyScore: 78,
       status: "AVAILABLE", // Still available in DB, but derived logic makes ineligible

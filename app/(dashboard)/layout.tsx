@@ -25,11 +25,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex h-screen bg-gray-50/50 dark:bg-background">
       {/* Sidebar */}
       <div className="w-64 border-r bg-white dark:bg-card flex flex-col shadow-sm hidden md:flex">
-        <div className="h-16 flex items-center justify-between px-6 border-b">
+        <div className="h-16 flex items-center px-6 border-b">
           <span className="font-bold text-xl text-primary flex items-center gap-2">
             <Truck className="h-5 w-5" /> TransitOps
           </span>
-          <ThemeToggle />
         </div>
         <div className="flex-1 py-6 px-4 space-y-1 overflow-y-auto">
           {navigation.map((item) => {
@@ -78,14 +77,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header */}
-        <header className="bg-white dark:bg-card border-b h-16 flex md:hidden items-center justify-between px-6 shadow-sm">
-          <div className="font-bold text-xl text-primary flex items-center gap-2">
+        {/* Top Navigation Header */}
+        <header className="bg-white dark:bg-card border-b h-16 flex items-center justify-between px-6 shadow-sm z-10 relative">
+          <div className="flex items-center md:hidden gap-2 font-bold text-xl text-primary">
             <Truck className="h-5 w-5" /> TransitOps
           </div>
-          <div className="flex items-center gap-2">
+          
+          {/* Empty spacer for desktop left side since logo is in sidebar */}
+          <div className="hidden md:block flex-1"></div>
+
+          <div className="flex items-center gap-6">
+            <div className="hidden md:flex items-center text-sm text-muted-foreground font-medium gap-2">
+              {session?.user?.email} 
+              <span className="text-gray-300 dark:text-gray-600">|</span> 
+              <span className="uppercase text-xs font-bold text-primary">{session?.user?.role?.replace("_", " ")}</span>
+            </div>
             <ThemeToggle />
-            <button onClick={() => signOut({ callbackUrl: "/login" })} className="p-2 text-muted-foreground hover:text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors">
+            <button onClick={() => signOut({ callbackUrl: "/login" })} className="p-2 text-muted-foreground hover:text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors md:hidden">
               <LogOut className="h-5 w-5" />
             </button>
           </div>

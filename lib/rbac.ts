@@ -18,8 +18,8 @@ export async function requireRole(
   }
 
   if (!session?.user?.role || !roles.includes(session.user.role)) {
-    if (!session) throw new Error("401 Unauthorized");
-    throw new Error("403 Forbidden");
+    if (!session) throw new Error("Unauthorized");
+    throw new Error("Forbidden");
   }
   return session;
 }
@@ -29,7 +29,7 @@ export function requireFieldScope(
   payload: Record<string, unknown>,
   allowedFieldsForRole: Partial<Record<Role, string[]>>
 ) {
-  if (!session?.user?.role) throw new Error("403 Forbidden")
+  if (!session?.user?.role) throw new Error("Forbidden")
   
   const role = session.user.role
   const allowedFields = allowedFieldsForRole[role]
@@ -40,7 +40,7 @@ export function requireFieldScope(
     const unauthorizedFields = requestedFields.filter(f => !allowedFields.includes(f))
     
     if (unauthorizedFields.length > 0) {
-      throw new Error(`403 Forbidden: Field(s) [${unauthorizedFields.join(", ")}] not allowed for role ${role}`)
+      throw new Error(`Forbidden: Field(s) [${unauthorizedFields.join(", ")}] not allowed for role ${role}`)
     }
   }
 }

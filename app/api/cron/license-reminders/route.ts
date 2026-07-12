@@ -23,7 +23,7 @@ export async function GET(req: Request) {
           lte: thirtyDaysFromNow,
         },
         status: {
-          not: "TERMINATED"
+          not: "SUSPENDED"
         }
       },
     });

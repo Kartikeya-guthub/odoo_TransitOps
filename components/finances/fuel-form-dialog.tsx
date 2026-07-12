@@ -108,7 +108,11 @@ export function FuelFormDialog() {
                 value={form.watch("vehicleId")}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={vehiclesLoading ? "Loading..." : "Select Vehicle"} />
+                  <SelectValue placeholder={vehiclesLoading ? "Loading..." : "Select Vehicle"}>
+                    {vehicles?.find(v => v.id === form.watch("vehicleId")) 
+                      ? `${vehicles.find(v => v.id === form.watch("vehicleId"))?.regNumber} (${vehicles.find(v => v.id === form.watch("vehicleId"))?.name})`
+                      : vehiclesLoading ? "Loading..." : "Select Vehicle"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {vehicles?.length === 0 ? (

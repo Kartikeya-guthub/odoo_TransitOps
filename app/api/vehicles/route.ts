@@ -45,9 +45,13 @@ export async function POST(req: Request) {
     const json = await req.json();
     const body = vehicleSchema.parse(json);
 
+    // Enforce uppercase registration number to prevent case-sensitive duplicates
+    const normalizedRegNumber = body.regNumber.toUpperCase();
+
     const vehicle = await prisma.vehicle.create({
       data: {
         ...body,
+        regNumber: normalizedRegNumber,
         status: "AVAILABLE",
       },
     });

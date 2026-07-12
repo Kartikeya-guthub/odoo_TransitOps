@@ -313,7 +313,7 @@ export default function TripDetailPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Route Info */}
-        <div className="bg-white rounded-xl border shadow-sm p-6 space-y-6">
+        <div className="bg-card text-card-foreground rounded-xl border shadow-sm p-6 space-y-6">
           <h2 className="text-lg font-semibold flex items-center gap-2 border-b pb-4">
             <MapPin className="h-5 w-5 text-primary" /> Route Information
           </h2>
@@ -355,7 +355,7 @@ export default function TripDetailPage() {
         {/* Resources Info */}
         <div className="space-y-6">
           {/* Vehicle */}
-          <div className="bg-white rounded-xl border shadow-sm p-6 space-y-4">
+          <div className="bg-card text-card-foreground rounded-xl border shadow-sm p-6 space-y-4">
             <h2 className="text-lg font-semibold flex items-center gap-2 border-b pb-4">
               <Truck className="h-5 w-5 text-primary" /> Assigned Vehicle
             </h2>
@@ -364,14 +364,14 @@ export default function TripDetailPage() {
                 <p className="font-medium text-lg">{trip.vehicle.regNumber}</p>
                 <p className="text-muted-foreground">{trip.vehicle.name} ({trip.vehicle.type})</p>
               </div>
-              <Badge variant="outline" className="bg-gray-50">
+              <Badge variant="outline" className="bg-secondary text-secondary-foreground">
                 Max Load: {trip.vehicle.maxLoadCapacity} kg
               </Badge>
             </div>
           </div>
 
           {/* Driver */}
-          <div className="bg-white rounded-xl border shadow-sm p-6 space-y-4">
+          <div className="bg-card text-card-foreground rounded-xl border shadow-sm p-6 space-y-4">
             <h2 className="text-lg font-semibold flex items-center gap-2 border-b pb-4">
               <UserIcon className="h-5 w-5 text-primary" /> Assigned Driver
             </h2>
@@ -380,7 +380,7 @@ export default function TripDetailPage() {
                 <p className="font-medium text-lg">{trip.driver.name}</p>
                 <p className="text-muted-foreground">License: {trip.driver.licenseNumber} ({trip.driver.licenseCategory})</p>
               </div>
-              <Badge variant="outline" className="bg-gray-50">
+              <Badge variant="outline" className="bg-secondary text-secondary-foreground">
                 Score: {trip.driver.safetyScore}/100
               </Badge>
             </div>

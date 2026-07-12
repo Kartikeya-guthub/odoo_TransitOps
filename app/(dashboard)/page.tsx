@@ -7,7 +7,7 @@ import { Truck, Activity, Wrench, Navigation, CheckSquare, Users, Percent, Loade
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { PieChart, Pie, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 type DashboardData = {
   activeVehicles: number;
@@ -17,6 +17,10 @@ type DashboardData = {
   pendingTrips: number;
   driversOnDuty: number;
   fleetUtilization: number;
+  statusDistribution: {
+    vehicles: { available: number; onTrip: number; inShop: number; retired: number };
+    trips: { draft: number; dispatched: number; completed: number; cancelled: number };
+  };
 };
 
 export default function DashboardPage() {
@@ -57,7 +61,7 @@ export default function DashboardPage() {
       <div className="p-4 bg-muted/30 border rounded-xl flex flex-wrap gap-4 items-end">
         <div className="space-y-1">
           <Label className="text-xs text-muted-foreground uppercase tracking-wider">Vehicle Type</Label>
-          <Select value={type} onValueChange={setType}>
+          <Select value={type} onValueChange={(val) => setType(val || "all")}>
             <SelectTrigger className="w-[180px] bg-background">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
@@ -71,7 +75,7 @@ export default function DashboardPage() {
 
         <div className="space-y-1">
           <Label className="text-xs text-muted-foreground uppercase tracking-wider">Region</Label>
-          <Select value={region} onValueChange={setRegion}>
+          <Select value={region} onValueChange={(val) => setRegion(val || "all")}>
             <SelectTrigger className="w-[180px] bg-background">
               <SelectValue placeholder="All Regions" />
             </SelectTrigger>
@@ -213,7 +217,14 @@ export default function DashboardPage() {
                       paddingAngle={5}
                       dataKey="value"
                     >
-                      {/* Cells take their fill from the data automatically in Recharts if we just map over data or supply fill in data. Actually, we need Cell component. Let's import Cell. */}
+                      {[
+                        { name: "Available", value: kpis.statusDistribution.vehicles.available, fill: "#10b981" },
+                        { name: "On Trip", value: kpis.statusDistribution.vehicles.onTrip, fill: "#3b82f6" },
+                        { name: "In Shop", value: kpis.statusDistribution.vehicles.inShop, fill: "#f59e0b" },
+                        { name: "Retired", value: kpis.statusDistribution.vehicles.retired, fill: "#64748b" },
+                      ].filter(d => d.value > 0).map((entry, index) => (
+                        <Cell key={`cell-v-${index}`} fill={entry.fill} />
+                      ))}
                     </Pie>
                     <Tooltip />
                     <Legend />
@@ -244,7 +255,16 @@ export default function DashboardPage() {
                       outerRadius={80}
                       paddingAngle={5}
                       dataKey="value"
-                    />
+                    >
+                      {[
+                        { name: "Draft", value: kpis.statusDistribution.trips.draft, fill: "#f59e0b" },
+                        { name: "Dispatched", value: kpis.statusDistribution.trips.dispatched, fill: "#3b82f6" },
+                        { name: "Completed", value: kpis.statusDistribution.trips.completed, fill: "#10b981" },
+                        { name: "Cancelled", value: kpis.statusDistribution.trips.cancelled, fill: "#ef4444" },
+                      ].filter(d => d.value > 0).map((entry, index) => (
+                        <Cell key={`cell-t-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
                     <Tooltip />
                     <Legend />
                   </PieChart>
