@@ -11,6 +11,7 @@ async function main() {
   await prisma.expense.deleteMany()
   await prisma.maintenanceLog.deleteMany()
   await prisma.trip.deleteMany()
+  await prisma.vehicleDocument.deleteMany()
   await prisma.driverProfile.deleteMany()
   await prisma.vehicle.deleteMany()
   await prisma.user.deleteMany()
@@ -89,6 +90,29 @@ async function main() {
     console.log(`Created driver: ${d.name} [${d.status}]`)
   }
 
+  // --- 2.5 Bulk Generate Drivers ---
+  const firstNames = ["James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda", "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen"];
+  const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin"];
+  
+  for (let i = 6; i <= 50; i++) {
+    const fn = firstNames[Math.floor(Math.random() * firstNames.length)];
+    const ln = lastNames[Math.floor(Math.random() * lastNames.length)];
+    const statuses = ["AVAILABLE", "ON_TRIP", "OFF_DUTY"];
+    const status = statuses[Math.floor(Math.random() * statuses.length)] as DriverStatus;
+    await prisma.driverProfile.create({
+      data: {
+        name: `${fn} ${ln}`,
+        licenseNumber: `DL-20${i.toString().padStart(3, '0')}`,
+        licenseCategory: Math.random() > 0.5 ? "Class A" : "Class B",
+        licenseExpiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + Math.floor(Math.random() * 5) + 1)),
+        contactNumber: `555-${Math.floor(1000 + Math.random() * 9000)}`,
+        safetyScore: Math.floor(60 + Math.random() * 40),
+        status,
+      }
+    });
+  }
+  console.log("Created 45 bulk drivers");
+
 
   // --- 3. Create Vehicles ---
   const vehicles = [
@@ -117,6 +141,45 @@ async function main() {
       console.log(`Created MaintenanceLog for ${created.regNumber}`)
     }
   }
+
+  // --- 3.5 Bulk Generate Vehicles ---
+  const vTypes = ["Heavy Truck", "Cargo Van", "Box Truck", "Refrigerated Truck"];
+  const vBrands = ["Volvo FH16", "Ford Transit", "Scania R500", "Mercedes Actros", "Freightliner Cascadia", "Kenworth T680", "Peterbilt 579"];
+  const regions = ["North", "South", "East", "West"];
+  const vStatuses = ["AVAILABLE", "ON_TRIP", "IN_SHOP"];
+  
+  for (let i = 6; i <= 50; i++) {
+    const type = vTypes[Math.floor(Math.random() * vTypes.length)];
+    const brand = vBrands[Math.floor(Math.random() * vBrands.length)];
+    const region = regions[Math.floor(Math.random() * regions.length)];
+    const status = vStatuses[Math.floor(Math.random() * vStatuses.length)] as VehicleStatus;
+    const prefix = type.includes("Van") ? "VAN" : "TRK";
+    const createdV = await prisma.vehicle.create({
+      data: {
+        regNumber: `${prefix}-1${i.toString().padStart(3, '0')}`,
+        name: brand,
+        type,
+        maxLoadCapacity: Math.floor(2000 + Math.random() * 38000),
+        odometer: Math.floor(10000 + Math.random() * 490000),
+        acquisitionCost: Math.floor(30000 + Math.random() * 120000),
+        region,
+        status,
+      }
+    });
+
+    if (createdV.status === "IN_SHOP") {
+      await prisma.maintenanceLog.create({
+        data: {
+          vehicleId: createdV.id,
+          description: "Routine scheduled maintenance and inspections",
+          cost: Math.floor(200 + Math.random() * 1500),
+          date: new Date(),
+          status: "ACTIVE"
+        }
+      });
+    }
+  }
+  console.log("Created 45 bulk vehicles");
 
   // --- 4. Seed Standalone Fuel Logs & Expenses ---
   // Fetch vehicles to use their real IDs
@@ -198,6 +261,64 @@ async function main() {
       await prisma.trip.create({ data: t as any })
     }
     console.log("Created Trips")
+
+    // --- 6. Bulk Generate Random Trips & Logs ---
+    const allVehicles = await prisma.vehicle.findMany();
+    const allDrivers = await prisma.driverProfile.findMany();
+    
+    // Bulk fuel logs and expenses
+    for (let i = 0; i < 100; i++) {
+      const rv = allVehicles[Math.floor(Math.random() * allVehicles.length)];
+      await prisma.fuelLog.create({
+        data: {
+          vehicleId: rv.id,
+          liters: Math.floor(20 + Math.random() * 200),
+          cost: Math.floor(50 + Math.random() * 300),
+          date: new Date(new Date().setDate(new Date().getDate() - Math.floor(Math.random() * 30)))
+        }
+      });
+      await prisma.expense.create({
+        data: {
+          vehicleId: rv.id,
+          type: ["TOLL", "MAINTENANCE", "MISC"][Math.floor(Math.random() * 3)] as any,
+          amount: Math.floor(15 + Math.random() * 400),
+          date: new Date(new Date().setDate(new Date().getDate() - Math.floor(Math.random() * 30)))
+        }
+      });
+    }
+    console.log("Created 100 bulk fuel logs and expenses");
+
+    // Bulk trips
+    const sources = ["Warehouse A", "Port B", "Factory C", "Distribution Center", "Retail Hub", "Supplier Depot", "Dock 4"];
+    for (let i = 0; i < 60; i++) {
+      const rv = allVehicles[Math.floor(Math.random() * allVehicles.length)];
+      const rd = allDrivers[Math.floor(Math.random() * allDrivers.length)];
+      const src = sources[Math.floor(Math.random() * sources.length)];
+      let dest = sources[Math.floor(Math.random() * sources.length)];
+      while (dest === src) dest = sources[Math.floor(Math.random() * sources.length)];
+      
+      const tripStatuses = ["COMPLETED", "COMPLETED", "COMPLETED", "DISPATCHED", "DRAFT"];
+      const tStatus = tripStatuses[Math.floor(Math.random() * tripStatuses.length)];
+      
+      await prisma.trip.create({
+        data: {
+          source: src,
+          destination: dest,
+          vehicleId: rv.id,
+          driverId: rd.id,
+          cargoWeight: Math.floor(1000 + Math.random() * rv.maxLoadCapacity),
+          plannedDistance: Math.floor(50 + Math.random() * 800),
+          actualDistance: tStatus === "COMPLETED" ? Math.floor(50 + Math.random() * 850) : null,
+          revenue: tStatus === "COMPLETED" ? Math.floor(200 + Math.random() * 2000) : null,
+          status: tStatus as any,
+          createdById: fm.id,
+          createdAt: new Date(new Date().setDate(new Date().getDate() - Math.floor(10 + Math.random() * 20))),
+          dispatchedAt: tStatus !== "DRAFT" ? new Date(new Date().setDate(new Date().getDate() - Math.floor(2 + Math.random() * 8))) : null,
+          completedAt: tStatus === "COMPLETED" ? new Date(new Date().setDate(new Date().getDate() - Math.floor(Math.random() * 2))) : null
+        }
+      });
+    }
+    console.log("Created 60 bulk trips");
   }
 
 }

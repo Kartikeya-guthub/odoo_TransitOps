@@ -7,6 +7,7 @@ import { Truck, Users, LogOut, LayoutDashboard, Map, Wrench, Wallet, BarChart3 }
 import { cn } from "@/lib/utils";
 
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ChatPanel } from "@/components/copilot/chat-panel";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -106,6 +107,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </main>
       </div>
+
+      {session?.user?.role === "FLEET_MANAGER" && <ChatPanel />}
     </div>
   );
 }

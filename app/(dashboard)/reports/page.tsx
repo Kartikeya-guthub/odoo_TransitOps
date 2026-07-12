@@ -129,16 +129,18 @@ export default function ReportsPage() {
             </div>
             <CardDescription>Ratio of Net Revenue to Acquisition Cost per vehicle.</CardDescription>
           </CardHeader>
-          <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={metrics} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="regNumber" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v * 100).toFixed(0)}%`} />
-                <Tooltip cursor={{ fill: "transparent" }} formatter={(value: number) => [`${(value * 100).toFixed(2)}%`, "ROI"]} />
-                <Bar dataKey="roi" fill="#10b981" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <CardContent className="h-[300px] overflow-x-auto">
+            <div className="min-w-[1200px] h-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={metrics} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="regNumber" fontSize={12} tickLine={false} axisLine={false} interval={0} angle={-45} textAnchor="end" height={60} />
+                  <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v * 100).toFixed(0)}%`} />
+                  <Tooltip cursor={{ fill: "transparent" }} formatter={(value: number) => [`${(value * 100).toFixed(2)}%`, "ROI"]} />
+                  <Bar dataKey="roi" fill="#10b981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
 
@@ -150,18 +152,20 @@ export default function ReportsPage() {
             </div>
             <CardDescription>Direct comparison of expenses (fuel + maintenance) vs trip revenue.</CardDescription>
           </CardHeader>
-          <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={metrics} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="regNumber" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}`} />
-                <Tooltip cursor={{ fill: "transparent" }} formatter={(value: number) => [`$${value.toFixed(2)}`, ""]} />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
-                <Bar name="Revenue" dataKey="revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                <Bar name="Cost" dataKey="operationalCost" fill="#f43f5e" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <CardContent className="h-[300px] overflow-x-auto">
+            <div className="min-w-[1200px] h-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={metrics} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="regNumber" fontSize={12} tickLine={false} axisLine={false} interval={0} angle={-45} textAnchor="end" height={60} />
+                  <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}`} />
+                  <Tooltip cursor={{ fill: "transparent" }} formatter={(value: number) => [`$${value.toFixed(2)}`, ""]} />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                  <Bar name="Revenue" dataKey="revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar name="Cost" dataKey="operationalCost" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
       </div>
