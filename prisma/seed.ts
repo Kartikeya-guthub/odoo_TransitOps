@@ -1,4 +1,4 @@
-import { PrismaClient, Role, VehicleStatus } from '@prisma/client'
+import { PrismaClient, Role, VehicleStatus, DriverStatus } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
@@ -6,7 +6,8 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('Seeding data...')
   
-  // Wipe in FK-safe order (vehicles first, then users)
+  // Wipe in FK-safe order
+  await prisma.driverProfile.deleteMany()
   await prisma.vehicle.deleteMany()
   await prisma.user.deleteMany()
 
@@ -30,7 +31,62 @@ async function main() {
     console.log(`Created user: ${u.email} [${u.role}]`)
   }
 
-  // --- 2. Create Vehicles ---
+  // --- 2. Create Drivers ---
+  const drivers = [
+    {
+      name: "Alice Johnson",
+      licenseNumber: "DL-1001",
+      licenseCategory: "Class A",
+      licenseExpiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 2)), // Future
+      contactNumber: "555-0101",
+      safetyScore: 95,
+      status: "AVAILABLE",
+    },
+    {
+      name: "Bob Smith",
+      licenseNumber: "DL-1002",
+      licenseCategory: "Class A",
+      licenseExpiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)), // Future
+      contactNumber: "555-0102",
+      safetyScore: 82,
+      status: "ON_TRIP",
+    },
+    {
+      name: "Charlie Davis",
+      licenseNumber: "DL-1003",
+      licenseCategory: "Class B",
+      licenseExpiryDate: new Date(new Date().setDate(new Date().getDate() - 5)), // Expired 5 days ago
+      contactNumber: "555-0103",
+      safetyScore: 78,
+      status: "AVAILABLE", // Still available in DB, but derived logic makes ineligible
+    },
+    {
+      name: "Diana Evans",
+      licenseNumber: "DL-1004",
+      licenseCategory: "Class A",
+      licenseExpiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 3)), // Future
+      contactNumber: "555-0104",
+      safetyScore: 45,
+      status: "SUSPENDED", // Ineligible due to status
+    },
+    {
+      name: "Ethan Wright",
+      licenseNumber: "DL-1005",
+      licenseCategory: "Class C",
+      licenseExpiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)), // Future
+      contactNumber: "555-0105",
+      safetyScore: 99,
+      status: "OFF_DUTY",
+    },
+  ];
+
+  for (const d of drivers) {
+    await prisma.driverProfile.create({ data: { ...d, status: d.status as DriverStatus } })
+    console.log(`Created driver: ${d.name} [${d.status}]`)
+  }
+
+
+  // --- 3. Create Vehicles ---
   const vehicles = [
     { regNumber: "TRK-001", name: "Volvo FH16",        type: "Heavy Truck", maxLoadCapacity: 40000, odometer: 125000, acquisitionCost: 150000, region: "North", status: VehicleStatus.AVAILABLE },
     { regNumber: "VAN-002", name: "Ford Transit",       type: "Cargo Van",   maxLoadCapacity: 3500,  odometer: 45000,  acquisitionCost: 45000,  region: "South", status: VehicleStatus.AVAILABLE },
