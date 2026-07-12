@@ -26,7 +26,8 @@ import { useState } from "react";
 
 import { DataTable } from "@/components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, FileText } from "lucide-react";
+import Link from "next/link";
 
 export default function VehiclesPage() {
   const { data: session } = useSession();
@@ -124,6 +125,11 @@ export default function VehiclesPage() {
         const vehicle = row.original;
         return (
           <div className="flex justify-end gap-2 pr-4 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Link href={`/vehicles/${vehicle.id}`}>
+              <Button variant="outline" size="icon" title="View Documents">
+                <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </Button>
+            </Link>
             <VehicleFormDialog vehicle={vehicle} />
             {vehicle.status !== "RETIRED" && (
               <AlertDialog>

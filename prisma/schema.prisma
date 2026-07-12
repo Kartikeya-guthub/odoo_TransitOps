@@ -75,6 +75,15 @@ model Vehicle {
   documents       VehicleDocument[]
 }
 
+model VehicleDocument {
+  id          String   @id @default(cuid())
+  vehicleId   String
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
+  docType     String   // e.g., "Registration", "Insurance", "Permit"
+  fileUrl     String   // URL to the stored file
+  uploadedAt  DateTime @default(now())
+}
+
 model DriverProfile {
   id                String       @id @default(uuid())
   name              String
@@ -143,14 +152,4 @@ model Expense {
   date      DateTime
 
   vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
-}
-
-model VehicleDocument {
-  id         String   @id @default(uuid())
-  vehicleId  String
-  docType    String
-  fileUrl    String
-  uploadedAt DateTime @default(now())
-
-  vehicle    Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
 }

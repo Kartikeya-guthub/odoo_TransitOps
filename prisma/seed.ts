@@ -121,9 +121,14 @@ async function main() {
   // --- 4. Seed Standalone Fuel Logs & Expenses ---
   // Fetch vehicles to use their real IDs
   const dbVehicles = await prisma.vehicle.findMany()
-  if (dbVehicles.length > 0) {
+  const dbDrivers = await prisma.driverProfile.findMany()
+  const fm = await prisma.user.findFirst({ where: { role: "FLEET_MANAGER" } })
+  
+  if (dbVehicles.length >= 2 && dbDrivers.length >= 2 && fm) {
     const v1 = dbVehicles[0] // TRK-001
     const v2 = dbVehicles[1] // VAN-002
+    const d1 = dbDrivers[0]
+    const d2 = dbDrivers[1]
 
     await prisma.fuelLog.createMany({
       data: [
@@ -142,6 +147,57 @@ async function main() {
       ]
     })
     console.log("Created Expenses")
+
+    // --- 5. Seed Trips ---
+    const trips = [
+      {
+        source: "Warehouse A",
+        destination: "Distribution Center",
+        vehicleId: v1.id,
+        driverId: d1.id,
+        cargoWeight: 15000,
+        plannedDistance: 450,
+        actualDistance: 460,
+        revenue: 1200.00,
+        status: "COMPLETED",
+        createdById: fm.id,
+        createdAt: new Date(new Date().setDate(new Date().getDate() - 5)),
+        dispatchedAt: new Date(new Date().setDate(new Date().getDate() - 4)),
+        completedAt: new Date(new Date().setDate(new Date().getDate() - 2))
+      },
+      {
+        source: "Port B",
+        destination: "Retail Hub",
+        vehicleId: v2.id,
+        driverId: d2.id,
+        cargoWeight: 2000,
+        plannedDistance: 120,
+        actualDistance: 125,
+        revenue: 400.00,
+        status: "COMPLETED",
+        createdById: fm.id,
+        createdAt: new Date(new Date().setDate(new Date().getDate() - 10)),
+        dispatchedAt: new Date(new Date().setDate(new Date().getDate() - 9)),
+        completedAt: new Date(new Date().setDate(new Date().getDate() - 8))
+      },
+      {
+        source: "Factory C",
+        destination: "Warehouse B",
+        vehicleId: dbVehicles[2].id, // TRK-003, which is ON_TRIP
+        driverId: dbDrivers[1].id,   // Bob, who is ON_TRIP
+        cargoWeight: 25000,
+        plannedDistance: 600,
+        status: "DISPATCHED",
+        createdById: fm.id,
+        createdAt: new Date(new Date().setDate(new Date().getDate() - 1)),
+        dispatchedAt: new Date()
+      }
+    ]
+
+    for (const t of trips) {
+      await prisma.trip.create({ data: t as any })
+    }
+    console.log("Created Trips")
   }
 
 }

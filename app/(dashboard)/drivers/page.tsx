@@ -129,28 +129,36 @@ export default function DriversPage() {
         {isManager && <DriverFormDialog />}
       </div>
 
-                      ) : (
-                        <div className="flex items-center text-destructive text-sm font-medium">
-                          <AlertTriangle className="w-4 h-4 mr-1.5" /> Ineligible
-                        </div>
-                      )}
-                    </TableCell>
-                    {showActions && (
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {isManager && <DriverFormDialog driver={driver} />}
-                          {isSafety && <DriverStatusDialog driver={driver} />}
-                          {isManager && <DriverDeleteDialog driver={driver} />}
-                        </div>
-                      </TableCell>
-                    )}
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+      <div className="bg-card text-card-foreground shadow-sm">
+        {isLoading ? (
+          <div className="h-48 flex items-center justify-center border rounded-xl">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <DataTable 
+            columns={columns} 
+            data={drivers || []} 
+            searchKey="name" 
+            searchPlaceholder="Search Drivers..." 
+          />
+        )}
       </div>
+      
+      {isManager && (
+        <div className="flex justify-end pt-4 border-t">
+          <Button 
+            variant="secondary" 
+            onClick={async () => {
+              const res = await fetch("/api/cron/license-reminders?manual=true");
+              const data = await res.json();
+              if (res.ok) alert(`Reminder check complete. ${data.count} driver(s) expiring soon. Email mocked: ${data.mocked}`);
+              else alert(`Error: ${data.error}`);
+            }}
+          >
+            Trigger Reminder Check
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

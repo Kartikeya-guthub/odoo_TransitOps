@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Download, Loader2, BarChart3, Receipt, Gauge, TrendingUp, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -53,6 +54,45 @@ export default function ReportsPage() {
     );
   }
 
+  const exportPDF = () => {
+    if (!metrics) return;
+    
+    // Dynamically import jspdf to avoid SSR issues
+    import("jspdf").then(({ default: jsPDF }) => {
+      import("jspdf-autotable").then(({ default: autoTable }) => {
+        const doc = new jsPDF();
+        
+        doc.setFontSize(18);
+        doc.text("TransitOps Fleet Analytics Report", 14, 22);
+        
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+        const tableColumn = ["Registration", "Name", "Fuel Eff. (km/L)", "Op Cost ($)", "Revenue ($)", "ROI"];
+        const tableRows = metrics.map(r => [
+          r.regNumber,
+          r.name,
+          r.fuelEfficiency !== null ? r.fuelEfficiency.toFixed(2) : "N/A",
+          r.operationalCost.toFixed(2),
+          r.revenue.toFixed(2),
+          `${(r.roi * 100).toFixed(2)}%`
+        ]);
+
+        autoTable(doc, {
+          head: [tableColumn],
+          body: tableRows,
+          startY: 40,
+          theme: "grid",
+          styles: { fontSize: 10, cellPadding: 3 },
+          headStyles: { fillColor: [15, 23, 42] } // slate-900
+        });
+
+        doc.save("transitops-report.pdf");
+      });
+    });
+  };
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
@@ -62,13 +102,22 @@ export default function ReportsPage() {
             Detailed performance, operational cost, and ROI tracking per vehicle.
           </p>
         </div>
-        <a 
-          href="/api/reports/export"
-          target="_blank"
-          className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 gap-2"
-        >
-          <Download className="h-4 w-4" /> Export CSV
-        </a>
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={exportPDF}
+            variant="outline"
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" /> Export PDF
+          </Button>
+          <a 
+            href="/api/reports/export"
+            target="_blank"
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 gap-2"
+          >
+            <Download className="h-4 w-4" /> Export CSV
+          </a>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
