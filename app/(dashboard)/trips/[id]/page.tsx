@@ -6,9 +6,30 @@ import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, Truck, User as UserIcon, MapPin, AlertCircle } from "lucide-react";
+import { Loader2, ArrowLeft, Truck, User as UserIcon, MapPin, AlertCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type TripWithRelations = Trip & {
   vehicle: Vehicle;
@@ -23,9 +44,17 @@ export default function TripDetailPage() {
   const queryClient = useQueryClient();
   const [errorMsg, setErrorMsg] = useState("");
 
+  const [completeOpen, setCompleteOpen] = useState(false);
+  const [completeForm, setCompleteForm] = useState({
+    finalOdometer: 0,
+    fuelConsumed: 0,
+    fuelCost: 0,
+    revenue: 0,
+  });
+
   const isManager = session?.user?.role === "FLEET_MANAGER";
   const isDriver = session?.user?.role === "DRIVER";
-  const canDispatch = isManager || isDriver;
+  const canModify = isManager || isDriver;
 
   const { data: trip, isLoading, isError } = useQuery<TripWithRelations>({
     queryKey: ["trips", params.id],
@@ -35,6 +64,14 @@ export default function TripDetailPage() {
       return res.json();
     }
   });
+
+  const invalidateEverything = () => {
+    queryClient.invalidateQueries({ queryKey: ["trips"] });
+    queryClient.invalidateQueries({ queryKey: ["vehicles"] });
+    queryClient.invalidateQueries({ queryKey: ["drivers"] });
+    queryClient.invalidateQueries({ queryKey: ["vehicles", "available"] });
+    queryClient.invalidateQueries({ queryKey: ["drivers", "available"] });
+  };
 
   const dispatchMutation = useMutation({
     mutationFn: async () => {
@@ -46,17 +83,56 @@ export default function TripDetailPage() {
       if (!res.ok) throw new Error(data.error || "Failed to dispatch trip");
       return data;
     },
-    onSuccess: () => {
-      // Invalidate everything impacted by this dispatch
-      queryClient.invalidateQueries({ queryKey: ["trips"] });
-      queryClient.invalidateQueries({ queryKey: ["vehicles"] });
-      queryClient.invalidateQueries({ queryKey: ["drivers"] });
-      queryClient.invalidateQueries({ queryKey: ["vehicles", "available"] });
-      queryClient.invalidateQueries({ queryKey: ["drivers", "available"] });
+    onSuccess: invalidateEverything,
+    onError: (error: any) => setErrorMsg(error.message)
+  });
+
+  const completeMutation = useMutation({
+    mutationFn: async (payload: typeof completeForm) => {
+      setErrorMsg("");
+      const res = await fetch(`/api/trips/${params.id}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to complete trip");
+      return data;
     },
-    onError: (error: any) => {
-      setErrorMsg(error.message);
-    }
+    onSuccess: () => {
+      invalidateEverything();
+      setCompleteOpen(false);
+    },
+    onError: (error: any) => setErrorMsg(error.message)
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: async () => {
+      setErrorMsg("");
+      const res = await fetch(`/api/trips/${params.id}/cancel`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to cancel trip");
+      return data;
+    },
+    onSuccess: invalidateEverything,
+    onError: (error: any) => setErrorMsg(error.message)
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      setErrorMsg("");
+      const res = await fetch(`/api/trips/${params.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete draft trip");
+    },
+    onSuccess: () => {
+      invalidateEverything();
+      router.push("/trips");
+    },
+    onError: (error: any) => setErrorMsg(error.message)
   });
 
   const getStatusColor = (status: string) => {
@@ -105,17 +181,123 @@ export default function TripDetailPage() {
           <p className="text-muted-foreground mt-1">ID: {trip.id}</p>
         </div>
         
-        {/* Actions */}
-        {trip.status === "DRAFT" && canDispatch && (
-          <Button 
-            size="lg" 
-            onClick={() => dispatchMutation.mutate()} 
-            disabled={dispatchMutation.isPending}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            {dispatchMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Dispatch Trip
-          </Button>
+        {/* Actions based on State */}
+        {trip.status === "DRAFT" && canModify && (
+          <div className="flex gap-2">
+            <Button 
+              size="lg" 
+              variant="destructive"
+              onClick={() => deleteMutation.mutate()} 
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+              Delete Draft
+            </Button>
+            
+            <Button 
+              size="lg" 
+              onClick={() => dispatchMutation.mutate()} 
+              disabled={dispatchMutation.isPending}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {dispatchMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Dispatch Trip
+            </Button>
+          </div>
+        )}
+
+        {trip.status === "DISPATCHED" && canModify && (
+          <div className="flex gap-2">
+            {/* Cancel Trip AlertDialog */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button size="lg" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700">
+                  Cancel Trip
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will immediately cancel the trip and return the vehicle ({trip.vehicle.regNumber}) and driver ({trip.driver.name}) to the available pool. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Go back</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => cancelMutation.mutate()} className="bg-red-600 hover:bg-red-700">
+                    {cancelMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Confirm Cancellation
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Complete Trip Dialog */}
+            <Dialog open={completeOpen} onOpenChange={setCompleteOpen}>
+              <DialogTrigger asChild>
+                <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700">
+                  Complete Trip
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Complete Trip</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label>Final Odometer (km)</Label>
+                    <div className="relative">
+                      <Input 
+                        type="number" 
+                        value={completeForm.finalOdometer || ""}
+                        onChange={(e) => setCompleteForm({...completeForm, finalOdometer: parseFloat(e.target.value) || 0})}
+                      />
+                      <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">
+                        Current: {trip.vehicle.odometer} km
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Fuel Consumed (Liters)</Label>
+                      <Input 
+                        type="number" 
+                        value={completeForm.fuelConsumed || ""}
+                        onChange={(e) => setCompleteForm({...completeForm, fuelConsumed: parseFloat(e.target.value) || 0})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Total Fuel Cost ($)</Label>
+                      <Input 
+                        type="number" 
+                        value={completeForm.fuelCost || ""}
+                        onChange={(e) => setCompleteForm({...completeForm, fuelCost: parseFloat(e.target.value) || 0})}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Trip Revenue ($)</Label>
+                    <Input 
+                      type="number" 
+                      value={completeForm.revenue || ""}
+                      onChange={(e) => setCompleteForm({...completeForm, revenue: parseFloat(e.target.value) || 0})}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      This revenue figure will be used for ROI calculations.
+                    </p>
+                  </div>
+                  <Button 
+                    className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700" 
+                    onClick={() => completeMutation.mutate(completeForm)}
+                    disabled={completeMutation.isPending}
+                  >
+                    {completeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Confirm Completion
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         )}
       </div>
 
@@ -123,7 +305,7 @@ export default function TripDetailPage() {
         <div className="bg-red-50 border border-red-100 p-4 rounded-lg flex items-start gap-3">
           <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
           <div>
-            <h3 className="text-sm font-semibold text-red-800">Dispatch Failed</h3>
+            <h3 className="text-sm font-semibold text-red-800">Action Failed</h3>
             <p className="text-sm text-red-600 mt-1">{errorMsg}</p>
           </div>
         </div>
@@ -155,6 +337,18 @@ export default function TripDetailPage() {
                 <p className="text-base mt-1">{trip.cargoWeight} kg</p>
               </div>
             </div>
+            {(trip.status === "COMPLETED") && (
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t bg-emerald-50/50 p-4 rounded-md">
+                <div>
+                  <p className="text-sm text-emerald-800 font-medium">Actual Distance</p>
+                  <p className="text-base mt-1 text-emerald-900">{trip.actualDistance} km</p>
+                </div>
+                <div>
+                  <p className="text-sm text-emerald-800 font-medium">Revenue</p>
+                  <p className="text-base mt-1 text-emerald-900">${trip.revenue}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
