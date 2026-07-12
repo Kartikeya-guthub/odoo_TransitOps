@@ -1,0 +1,60 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { requireRole } from "@/lib/rbac";
+import { vehicleSchema } from "@/lib/validations/vehicle";
+import prisma from "@/lib/db";
+import { Prisma } from "@prisma/client";
+import { z } from "zod";
+
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const type = searchParams.get("type");
+  const status = searchParams.get("status");
+  const region = searchParams.get("region");
+
+  const where: Prisma.VehicleWhereInput = {};
+  if (type) where.type = type;
+  if (status) where.status = status as "AVAILABLE" | "ON_TRIP" | "IN_SHOP" | "RETIRED";
+  if (region) where.region = region;
+
+  const vehicles = await prisma.vehicle.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+  });
+
+  return NextResponse.json(vehicles);
+}
+
+export async function POST(req: Request) {
+  const session = await getServerSession(authOptions);
+  
+  try {
+    requireRole(session, ["FLEET_MANAGER"]);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Forbidden";
+    return NextResponse.json({ error: message }, { status: 403 });
+  }
+
+  try {
+    const json = await req.json();
+    const body = vehicleSchema.parse(json);
+
+    const vehicle = await prisma.vehicle.create({
+      data: {
+        ...body,
+        status: "AVAILABLE",
+      },
+    });
+
+    return NextResponse.json(vehicle, { status: 201 });
+  } catch (error: unknown) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.issues }, { status: 400 });
+    }
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "P2002") {
+      return NextResponse.json({ error: "Registration number must be unique" }, { status: 409 });
+    }
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}

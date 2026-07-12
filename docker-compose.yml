@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: transitops-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: transitops
+    ports:
+      - "5432:5432"
+    volumes:
+      - transitops-db-data:/var/lib/postgresql/data
+
+volumes:
+  transitops-db-data:
